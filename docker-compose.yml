@@ -1,0 +1,49 @@
+# referenced from https://github.com/sameersbn/docker-gitlab/
+## Copyright (c) 2014 Sameer Naik
+## Licensed under MIT (https://github.com/sameersbn/docker-gitlab/blob/master/LICENSE)
+
+version: '2'
+
+services:
+  redis:
+    restart: always
+    image: sameersbn/redis:latest
+    command:
+      - --loglevel warning
+    volumes:
+      - ./gitlab/redis:/var/lib/redis:Z
+
+  postgresql:
+    restart: always
+    image: sameersbn/postgresql:9.6-2
+    volumes:
+      - ./gitlab/postgresql:/var/lib/postgresql:Z
+    env_file:
+      - ./db.env
+
+  gitlab:
+    restart: always
+
+    #1 -- gitlab が英語でもいい場合, 下のimageをコメントアウト
+    # image: sameersbn/gitlab
+    # -------------------------------------------------------------------------------
+
+    #2 -- gitlab を日本語化したい場合, 次の線までコメントアウト
+    build:
+      context: .
+      args:
+        - JP_GITLAB_VERSION=${JP_GITLAB_VERSION}
+    image: sameersbn/gitlab
+    # -------------------------------------------------------------------------------
+
+    depends_on:
+      - redis
+      - postgresql
+    ports:
+      - "10080:80"
+      - "10022:22"
+    volumes:
+      - ./gitlab/gitlab:/home/git/data:Z
+    env_file:
+      - ./gitlab.env
+      - ./db.env
